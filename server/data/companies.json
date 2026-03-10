@@ -1,0 +1,275 @@
+[
+  {
+    "companyname": "ישראכרט",
+    "companyID": "isracard_001",
+    "services": [
+      "all services"
+    ],
+    "annualFixedPayment": 195000,
+    "minimumMonthlyActions": 1500,
+    "SingalActionCost": 5,
+    "currency": "ILS",
+    "minMonthlyCost": 7500,
+    "levels": [
+      {
+        "level": 1,
+        "from": 1500,
+        "to": 3500,
+        "actionCost": 5,
+        "actionCurrency": "ILS"
+      },
+      {
+        "level": 2,
+        "from": 3501,
+        "to": 6500,
+        "actionCost": 4.5,
+        "actionCurrency": "ILS"
+      },
+      {
+        "level": 3,
+        "from": 6501,
+        "to": 10000,
+        "actionCost": 4,
+        "actionCurrency": "ILS"
+      },
+      {
+        "level": 4,
+        "from": 10001,
+        "to": null,
+        "actionCost": 3.5,
+        "actionCurrency": "ILS"
+      }
+    ],
+    "typeOfAction": {
+      "sessionReturnToCustomer": true,
+      "oneComponentWorkedWithoutReturn": false,
+      "chargeRegardlessOfReturn": false,
+      "anyTouchAnyCharge": false,
+      "comboDependent": false,
+      "usingOneServiceOrMore": false,
+      "openAccount": false,
+      "notDetailedInAgreement": false
+    }
+  },
+  {
+    "companyname": "כאל (CAL)",
+    "companyID": "cal_002",
+    "bqCompanyId": "67e24df6ec44cf1de85aabe8",
+    "billing_rules": {
+      "action_expression": "COUNT(DISTINCT IF(service_name = 'ocr', session_id, NULL)) + COUNT(DISTINCT IF(service_name = 'liveness', session_id, NULL))",
+      "additional_filters": "AND service_name IN ('ocr','liveness')",
+      "service_name_filters": [
+        "ocr",
+        "liveness"
+      ],
+      "pricing_model": "tiered_volume"
+    },
+    "services": [
+      "OCR",
+      "LIVENESS/FACE"
+    ],
+    "service_options": [
+      { "label": "OCR",      "value": "ocr" },
+      { "label": "Liveness", "value": "liveness" }
+    ],
+    "annualFixedPayment": 202000,
+    "minimumMonthlyActions": 1500,
+    "SingalActionCost": 0,
+    "currency": "ILS",
+    "minMonthlyCost": 7500,
+    "levels": [
+      {
+        "level": 1,
+        "from": 0,
+        "to": 3500,
+        "actionCost": 3.4,
+        "actionCurrency": "ILS"
+      },
+      {
+        "level": 2,
+        "from": 3501,
+        "to": 6500,
+        "actionCost": 3.1,
+        "actionCurrency": "ILS"
+      },
+      {
+        "level": 3,
+        "from": 6501,
+        "to": 10000,
+        "actionCost": 2.7,
+        "actionCurrency": "ILS"
+      }
+    ],
+    "typeOfAction": {
+      "sessionReturnToCustomer": true,
+      "oneComponentWorkedWithoutReturn": false,
+      "chargeRegardlessOfReturn": false,
+      "anyTouchAnyCharge": false,
+      "comboDependent": false,
+      "usingOneServiceOrMore": false,
+      "openAccount": false,
+      "notDetailedInAgreement": false
+    }
+  },
+  {
+    "companyname": "אורדע",
+    "companyID": "orda_003",
+    "bqCompanyId": "67e3d43ef4c0fe53abbbda6a",
+    "services": [
+      "all services"
+    ],
+    "service_options": [
+      { "label": "OCR",        "value": "ocr" },
+      { "label": "Liveness",   "value": "liveness" },
+      { "label": "Face Match", "value": "face_match" }
+    ],
+    "annualFixedPayment": 0,
+    "minimumMonthlyActions": 800,
+    "SingalActionCost": 2.5,
+    "currency": "USD",
+    "minMonthlyCost": 2000,
+    "levels": [],
+    "typeOfAction": {
+      "sessionReturnToCustomer": false,
+      "oneComponentWorkedWithoutReturn": false,
+      "chargeRegardlessOfReturn": false,
+      "anyTouchAnyCharge": true,
+      "comboDependent": false,
+      "usingOneServiceOrMore": false,
+      "openAccount": false,
+      "notDetailedInAgreement": false
+    }
+  },
+  {
+    "companyname": "הראל",
+    "companyID": "harel_004",
+    "services": [
+      "OCR"
+    ],
+    "annualFixedPayment": 300000,
+    "minimumMonthlyActions": 10000,
+    "SingalActionCost": 2.5,
+    "currency": "ILS",
+    "minMonthlyCost": 25000,
+    "levels": [
+      {
+        "level": 1,
+        "from": 10001,
+        "to": 15000,
+        "actionCost": 2,
+        "actionCurrency": "ILS"
+      },
+      {
+        "level": 2,
+        "from": 15001,
+        "to": 20000,
+        "actionCost": 1.5,
+        "actionCurrency": "ILS"
+      },
+      {
+        "level": 3,
+        "from": 20001,
+        "to": null,
+        "actionCost": 1.25,
+        "actionCurrency": "ILS"
+      }
+    ],
+    "typeOfAction": {
+      "sessionReturnToCustomer": true,
+      "oneComponentWorkedWithoutReturn": false,
+      "chargeRegardlessOfReturn": false,
+      "anyTouchAnyCharge": false,
+      "comboDependent": false,
+      "usingOneServiceOrMore": false,
+      "openAccount": false,
+      "notDetailedInAgreement": false
+    }
+  },
+  {
+    "companyname": "אפקפיטול",
+    "companyID": "upcapital_005",
+    "services": [
+      "OCR",
+      "LIVENESS+FACE",
+      "STT"
+    ],
+    "annualFixedPayment": 80000,
+    "minimumMonthlyActions": 0,
+    "SingalActionCost": 0,
+    "currency": "ILS",
+    "minMonthlyCost": 6666,
+    "levels": [
+      {
+        "level": 1,
+        "from": 0,
+        "to": 25000,
+        "actionCost": 3.5,
+        "actionCurrency": "ILS"
+      },
+      {
+        "level": 2,
+        "from": 25001,
+        "to": 50000,
+        "actionCost": 2.5,
+        "actionCurrency": "ILS"
+      },
+      {
+        "level": 3,
+        "from": 50001,
+        "to": null,
+        "actionCost": 2,
+        "actionCurrency": "ILS"
+      }
+    ],
+    "typeOfAction": {
+      "sessionReturnToCustomer": false,
+      "oneComponentWorkedWithoutReturn": false,
+      "chargeRegardlessOfReturn": false,
+      "anyTouchAnyCharge": false,
+      "comboDependent": false,
+      "usingOneServiceOrMore": true,
+      "openAccount": false,
+      "notDetailedInAgreement": false
+    }
+  },
+  {
+    "companyname": "IBI",
+    "companyID": "ibi_006",
+    "bqCompanyId": "6742fb13ac84281f527c322e",
+    "billing_rules": {
+      "action_expression": "COUNT(DISTINCT CASE WHEN event_name = 'send_create_session_request' THEN session_id END) + 0.5 * COUNT(DISTINCT CASE WHEN event_name = 'liveness_session_init_request' THEN session_id END) + 0.5 * COUNT(DISTINCT CASE WHEN event_name = 'stt_recording_started' THEN session_id END) + 0.5 * COUNT(DISTINCT CASE WHEN event_name = 'face_match_responded_for_images' THEN session_id END)",
+      "additional_filters": "AND event_name IN ('send_create_session_request','liveness_session_init_request','stt_recording_started','face_match_responded_for_images')",
+      "weighted_events": {
+        "send_create_session_request": 1,
+        "liveness_session_init_request": 0.5,
+        "stt_recording_started": 0.5,
+        "face_match_responded_for_images": 0.5
+      },
+      "pricing_model": "flat_with_deduction",
+      "base_deduction": 2250
+    },
+    "services": ["OCR", "LIVENESS", "STT", "BIO"],
+    "service_options": [
+      { "label": "OCR",             "value": "ocr" },
+      { "label": "Liveness",        "value": "liveness" },
+      { "label": "Video Statement", "value": "video_statement" },
+      { "label": "Face Match",      "value": "face_match" }
+    ],
+    "annualFixedPayment": 0,
+    "minimumMonthlyActions": 1125,
+    "SingalActionCost": 1,
+    "currency": "USD",
+    "minMonthlyCost": 2250,
+    "levels": [],
+    "typeOfAction": {
+      "sessionReturnToCustomer": false,
+      "oneComponentWorkedWithoutReturn": false,
+      "chargeRegardlessOfReturn": false,
+      "anyTouchAnyCharge": false,
+      "comboDependent": false,
+      "usingOneServiceOrMore": true,
+      "openAccount": false,
+      "notDetailedInAgreement": false
+    }
+  }
+]
