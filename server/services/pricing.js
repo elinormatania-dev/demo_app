@@ -112,7 +112,7 @@ export function applyServicePricing(serviceRows, company, timeUnit) {
       period_start,
       time_label:        toTimeLabel(period_start, timeUnit),
       transaction_count: Math.round(transaction_count * 100) / 100,
-      total_payment:     Math.max(minMonthlyCost, Math.round(payment * 100) / 100),
+      total_payment:     Math.max(Math.ceil(active_days / 30) * minMonthlyCost, Math.round(payment * 100) / 100),
       currency,
       active_days,
     }));
