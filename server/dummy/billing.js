@@ -50,28 +50,14 @@ function toTimeLabel(periodStart, timeUnit) {
 }
 
 /**
- * Returns the last calendar day of a period as a 'YYYY-MM-DD' string.
- * periodStart is the first day of the period (e.g. '2024-01-01').
+ * active_days = (last active day in daySet) − (first active day in daySet) + 1.
  */
-function getPeriodEndStr(periodStart, timeUnit) {
-  const [y, m] = periodStart.split('-').map(Number);
-  if (timeUnit === 'YEAR') return `${y}-12-31`;
-  // endM is 1-indexed (3/6/9/12 for quarters, m for months)
-  const endM = timeUnit === 'QUARTER' ? Math.floor((m - 1) / 3) * 3 + 3 : m;
-  // Date.UTC(y, endM, 0) === last day of month endM (1-indexed) in UTC
-  const lastDay = new Date(Date.UTC(y, endM, 0)).getUTCDate();
-  return `${y}-${String(endM).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
-}
-
-/**
- * active_days = (end of period) − (first active day in daySet) + 1.
- * Represents "how many days was the user on the system up to the end of the period".
- */
-function daysFromFirstToEnd(daySet, periodStart, timeUnit) {
+function daysFromFirstToEnd(daySet) {
   if (daySet.size === 0) return 0;
-  const minDay = [...daySet].sort()[0];
-  const endStr = getPeriodEndStr(periodStart, timeUnit);
-  const diffMs = new Date(endStr + 'T00:00:00Z') - new Date(minDay + 'T00:00:00Z');
+  const sorted = [...daySet].sort();
+  const minDay = sorted[0];
+  const maxDay = sorted[sorted.length - 1];
+  const diffMs = new Date(maxDay + 'T00:00:00Z') - new Date(minDay + 'T00:00:00Z');
   return Math.max(1, Math.floor(diffMs / 86400000) + 1);
 }
 
@@ -163,7 +149,7 @@ export function getDummyBreakdown(companyId, periodStart, timeUnit, filters = {}
     }
   }
 
-  const active_days = daysFromFirstToEnd(activeDaySet, periodStart, timeUnit);
+  const active_days = daysFromFirstToEnd(activeDaySet);
   return Array.from(serviceSessions.entries())
     .map(([service_name, sessions]) => ({ service_name, action_count: sessions.size, active_days }))
     .sort((a, b) => b.action_count - a.action_count);
@@ -208,7 +194,7 @@ export function getDummyBillingData(companyId, timeUnit, filters = {}, rules = {
     return Array.from(periodServiceSessions.entries())
       .map(([key, sessions]) => {
         const [period_start, service_name] = key.split('::');
-        return { period_start, service_name, service_count: sessions.size, active_days: daysFromFirstToEnd(periodDayMap.get(period_start) ?? new Set(), period_start, timeUnit) };
+        return { period_start, service_name, service_count: sessions.size, active_days: daysFromFirstToEnd(periodDayMap.get(period_start) ?? new Set()) };
       })
       .sort((a, b) => a.period_start.localeCompare(b.period_start));
   }
@@ -294,6 +280,6 @@ export function getDummyBillingData(companyId, timeUnit, filters = {}, rules = {
       period_start: periodStart,
       time_label: toTimeLabel(periodStart, timeUnit),
       transaction_count: txCount,
-      active_days: daysFromFirstToEnd(periodDayMap.get(periodStart) ?? new Set(), periodStart, timeUnit),
+      active_days: daysFromFirstToEnd(periodDayMap.get(periodStart) ?? new Set()),
     }));
 }

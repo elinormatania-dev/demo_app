@@ -4,3 +4,4 @@ bigQuery.json
 .env
 dummyData.json
 data/companies.json
+server/cache
