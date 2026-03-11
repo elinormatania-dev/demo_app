@@ -51,6 +51,7 @@ export async function getBreakdown(companyId, periodStart, timeUnit, filters = {
  * @param {object} filters    - { serviceName?, dateFrom?, dateTo? }
  */
 export async function getBillingData(companyId, timeUnit = 'MONTH', filters = {}) {
+  console.log("getBillingData")
   const company = getCompany(companyId);
   const rules   = company?.billing_rules ?? {};
   const servicePricing = rules.service_pricing;

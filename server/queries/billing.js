@@ -51,18 +51,33 @@ export function generateBreakdownQuery(timeUnit, filters = {}, rules = {}) {
   }
   const { actionExpr, extraFilter } = resolveExpr(rules);
   const serviceFilter = filters.serviceName ? `AND service_name = @serviceName` : '';
+  const periodFilter = `DATE_TRUNC(DATE(TIMESTAMP(event_timestamp)), ${timeUnit}) = DATE(@periodStart)`;
   return `
 SELECT
-  service_name,
-  ${actionExpr} AS action_count
-FROM \`events.all_events\`
-WHERE company_id = @companyId
-  AND DATE_TRUNC(DATE(TIMESTAMP(event_timestamp)), ${timeUnit}) = DATE(@periodStart)
-  ${extraFilter}
-  ${serviceFilter}
-GROUP BY service_name
-HAVING action_count > 0
-ORDER BY action_count DESC
+  b.service_name,
+  b.action_count,
+  d.active_days
+FROM (
+  SELECT
+    service_name,
+    ${actionExpr} AS action_count
+  FROM \`events.all_events\`
+  WHERE company_id = @companyId
+    AND ${periodFilter}
+    ${extraFilter}
+    ${serviceFilter}
+  GROUP BY service_name
+  HAVING action_count > 0
+) b
+CROSS JOIN (
+  SELECT COUNT(DISTINCT DATE(TIMESTAMP(event_timestamp))) AS active_days
+  FROM \`events.all_events\`
+  WHERE company_id = @companyId
+    AND ${periodFilter}
+    ${extraFilter}
+    ${serviceFilter}
+) d
+ORDER BY b.action_count DESC
   `.trim();
 }
 

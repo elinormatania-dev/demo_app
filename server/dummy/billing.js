@@ -49,6 +49,32 @@ function toTimeLabel(periodStart, timeUnit) {
   return `${y}-${String(m).padStart(2, '0')}`;
 }
 
+/**
+ * Returns the last calendar day of a period as a 'YYYY-MM-DD' string.
+ * periodStart is the first day of the period (e.g. '2024-01-01').
+ */
+function getPeriodEndStr(periodStart, timeUnit) {
+  const [y, m] = periodStart.split('-').map(Number);
+  if (timeUnit === 'YEAR') return `${y}-12-31`;
+  // endM is 1-indexed (3/6/9/12 for quarters, m for months)
+  const endM = timeUnit === 'QUARTER' ? Math.floor((m - 1) / 3) * 3 + 3 : m;
+  // Date.UTC(y, endM, 0) === last day of month endM (1-indexed) in UTC
+  const lastDay = new Date(Date.UTC(y, endM, 0)).getUTCDate();
+  return `${y}-${String(endM).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+}
+
+/**
+ * active_days = (end of period) − (first active day in daySet) + 1.
+ * Represents "how many days was the user on the system up to the end of the period".
+ */
+function daysFromFirstToEnd(daySet, periodStart, timeUnit) {
+  if (daySet.size === 0) return 0;
+  const minDay = [...daySet].sort()[0];
+  const endStr = getPeriodEndStr(periodStart, timeUnit);
+  const diffMs = new Date(endStr + 'T00:00:00Z') - new Date(minDay + 'T00:00:00Z');
+  return Math.max(1, Math.floor(diffMs / 86400000) + 1);
+}
+
 function matchesFilters(event, filters) {
   if (filters.serviceName && event.service_name !== filters.serviceName) return false;
   if (filters.dateFrom) {
@@ -80,6 +106,7 @@ export function getDummyBreakdown(companyId, periodStart, timeUnit, filters = {}
 
   const INTERNAL_SERVICES  = new Set(['gateway', 'client_api', 'onboarding']);
   const serviceSessions    = new Map(); // service_name → Set<session_id>
+  const activeDaySet       = new Set(); // distinct calendar days with activity
   const servicePricing     = rules.service_pricing;
   const serviceNameFilters = rules.service_name_filters;
   const weightedEvents     = rules.weighted_events;
@@ -95,6 +122,7 @@ export function getDummyBreakdown(companyId, periodStart, timeUnit, filters = {}
       const svc = event.service_name;
       if (!serviceSessions.has(svc)) serviceSessions.set(svc, new Set());
       serviceSessions.get(svc).add(event.session_id);
+      activeDaySet.add(new Date(event.event_timestamp).toISOString().slice(0, 10));
     }
   } else if (serviceNameFilters) {
     for (const event of ALL_EVENTS) {
@@ -106,6 +134,7 @@ export function getDummyBreakdown(companyId, periodStart, timeUnit, filters = {}
       const svc = event.service_name || 'unknown';
       if (!serviceSessions.has(svc)) serviceSessions.set(svc, new Set());
       serviceSessions.get(svc).add(event.session_id);
+      activeDaySet.add(new Date(event.event_timestamp).toISOString().slice(0, 10));
     }
   } else if (weightedEvents) {
     const billableNames = new Set(Object.keys(weightedEvents));
@@ -118,6 +147,7 @@ export function getDummyBreakdown(companyId, periodStart, timeUnit, filters = {}
       const svc = event.service_name || 'unknown';
       if (!serviceSessions.has(svc)) serviceSessions.set(svc, new Set());
       serviceSessions.get(svc).add(event.session_id);
+      activeDaySet.add(new Date(event.event_timestamp).toISOString().slice(0, 10));
     }
   } else {
     for (const event of ALL_EVENTS) {
@@ -129,11 +159,13 @@ export function getDummyBreakdown(companyId, periodStart, timeUnit, filters = {}
       const svc = event.service_name || 'unknown';
       if (!serviceSessions.has(svc)) serviceSessions.set(svc, new Set());
       serviceSessions.get(svc).add(event.session_id);
+      activeDaySet.add(new Date(event.event_timestamp).toISOString().slice(0, 10));
     }
   }
 
+  const active_days = daysFromFirstToEnd(activeDaySet, periodStart, timeUnit);
   return Array.from(serviceSessions.entries())
-    .map(([service_name, sessions]) => ({ service_name, action_count: sessions.size }))
+    .map(([service_name, sessions]) => ({ service_name, action_count: sessions.size, active_days }))
     .sort((a, b) => b.action_count - a.action_count);
 }
 
@@ -153,12 +185,13 @@ export function getDummyBillingData(companyId, timeUnit, filters = {}, rules = {
   }
   rules = resolveRules(rules);
 
-  // service_pricing path — returns [{period_start, service_name, service_count}]
+  // service_pricing path — returns [{period_start, service_name, service_count, active_days}]
   // (matching the shape of generateServiceCountsQuery); applyServicePricing handles aggregation
   const servicePricing = rules.service_pricing;
   if (servicePricing && Object.keys(servicePricing).length > 0) {
     const billableServices      = new Set(Object.keys(servicePricing));
     const periodServiceSessions = new Map(); // `${periodStart}::${service_name}` → Set<session_id>
+    const periodDayMap          = new Map(); // periodStart → Set<date>
 
     for (const event of ALL_EVENTS) {
       if (event.company_id !== companyId) continue;
@@ -168,19 +201,22 @@ export function getDummyBillingData(companyId, timeUnit, filters = {}, rules = {
       const key         = `${periodStart}::${event.service_name}`;
       if (!periodServiceSessions.has(key)) periodServiceSessions.set(key, new Set());
       periodServiceSessions.get(key).add(event.session_id);
+      if (!periodDayMap.has(periodStart)) periodDayMap.set(periodStart, new Set());
+      periodDayMap.get(periodStart).add(new Date(event.event_timestamp).toISOString().slice(0, 10));
     }
 
     return Array.from(periodServiceSessions.entries())
       .map(([key, sessions]) => {
         const [period_start, service_name] = key.split('::');
-        return { period_start, service_name, service_count: sessions.size };
+        return { period_start, service_name, service_count: sessions.size, active_days: daysFromFirstToEnd(periodDayMap.get(period_start) ?? new Set(), period_start, timeUnit) };
       })
       .sort((a, b) => a.period_start.localeCompare(b.period_start));
   }
 
   const serviceNameFilters = rules.service_name_filters;
   const weightedEvents     = rules.weighted_events;
-  const periodMap = new Map(); // periodStart → txCount
+  const periodMap    = new Map(); // periodStart → txCount
+  const periodDayMap = new Map(); // periodStart → Set<date>
 
   if (weightedEvents) {
     // Weighted event counting: distinct sessions per event_name, multiplied by their weight
@@ -190,10 +226,13 @@ export function getDummyBillingData(companyId, timeUnit, filters = {}, rules = {
       if (event.company_id !== companyId) continue;
       if (weightedEvents[event.event_name] === undefined) continue;
       if (!matchesFilters(event, filters)) continue;
-      const monthStart = toMonthStart(event.event_timestamp);
-      const key        = `${monthStart}::${event.event_name}`;
+      const monthStart  = toMonthStart(event.event_timestamp);
+      const key         = `${monthStart}::${event.event_name}`;
       if (!monthEventSessions.has(key)) monthEventSessions.set(key, new Set());
       monthEventSessions.get(key).add(event.session_id);
+      const periodStart = toPeriodStart(monthStart, timeUnit);
+      if (!periodDayMap.has(periodStart)) periodDayMap.set(periodStart, new Set());
+      periodDayMap.get(periodStart).add(new Date(event.event_timestamp).toISOString().slice(0, 10));
     }
 
     for (const [key, sessions] of monthEventSessions) {
@@ -212,13 +251,17 @@ export function getDummyBillingData(companyId, timeUnit, filters = {}, rules = {
       if (event.company_id !== companyId) continue;
       if (!serviceNameFilters.includes(event.service_name)) continue;
       if (!matchesFilters(event, filters)) continue;
-      const key = `${toMonthStart(event.event_timestamp)}:${event.service_name}`;
+      const monthStart  = toMonthStart(event.event_timestamp);
+      const key         = `${monthStart}:${event.service_name}`;
       if (!monthServiceSessions.has(key)) monthServiceSessions.set(key, new Set());
       monthServiceSessions.get(key).add(event.session_id);
+      const periodStart = toPeriodStart(monthStart, timeUnit);
+      if (!periodDayMap.has(periodStart)) periodDayMap.set(periodStart, new Set());
+      periodDayMap.get(periodStart).add(new Date(event.event_timestamp).toISOString().slice(0, 10));
     }
 
     for (const [key, sessions] of monthServiceSessions) {
-      const monthStart = key.split(':')[0];
+      const monthStart  = key.split(':')[0];
       const periodStart = toPeriodStart(monthStart, timeUnit);
       periodMap.set(periodStart, (periodMap.get(periodStart) ?? 0) + sessions.size);
     }
@@ -231,9 +274,12 @@ export function getDummyBillingData(companyId, timeUnit, filters = {}, rules = {
       if (event.company_id !== companyId) continue;
       if (event.event_name !== eventNameFilter) continue;
       if (!matchesFilters(event, filters)) continue;
-      const monthStart = toMonthStart(event.event_timestamp);
+      const monthStart  = toMonthStart(event.event_timestamp);
       if (!monthSessions.has(monthStart)) monthSessions.set(monthStart, new Set());
       monthSessions.get(monthStart).add(event.session_id);
+      const periodStart = toPeriodStart(monthStart, timeUnit);
+      if (!periodDayMap.has(periodStart)) periodDayMap.set(periodStart, new Set());
+      periodDayMap.get(periodStart).add(new Date(event.event_timestamp).toISOString().slice(0, 10));
     }
 
     for (const [monthStart, sessions] of monthSessions) {
@@ -248,5 +294,6 @@ export function getDummyBillingData(companyId, timeUnit, filters = {}, rules = {
       period_start: periodStart,
       time_label: toTimeLabel(periodStart, timeUnit),
       transaction_count: txCount,
+      active_days: daysFromFirstToEnd(periodDayMap.get(periodStart) ?? new Set(), periodStart, timeUnit),
     }));
 }

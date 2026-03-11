@@ -25,8 +25,16 @@ function toTimeLabel(periodStart, timeUnit) {
  * @param {object} company   - entry from companies.json
  * @returns {number}         - total payment for the month (in company.currency)
  */
-export function calculateMonthlyPayment(txCount, company) {
-  const { levels = [], minMonthlyCost = 0, SingalActionCost = 0 } = company;
+export function calculateMonthlyPayment(txCount, active_days, company) {
+  console.log("txCount:", txCount)
+  console.log("company:", company)
+  const { levels, minMonthlyCost, SingalActionCost } = company;
+
+  console.log("active_days:", active_days)
+  console.log("minMonthlyCost:", minMonthlyCost)
+
+  const minCost = Math.ceil(active_days / 30) * minMonthlyCost;
+  console.log("minCost:", minCost)
   const pricingModel = company.billing_rules?.pricing_model ?? (levels.length ? 'tiered_volume' : 'flat');
 
   let payment = 0;
@@ -58,7 +66,7 @@ export function calculateMonthlyPayment(txCount, company) {
     }
   }
 
-  return Math.max(minMonthlyCost, Math.round(payment * 100) / 100);
+  return Math.max(minCost, Math.round(payment * 100) / 100);
 }
 
 /**
@@ -84,6 +92,7 @@ export function calculateMonthlyPayment(txCount, company) {
  * @returns {Array}            - [{ period_start, time_label, transaction_count, total_payment, currency }]
  */
 export function applyServicePricing(serviceRows, company, timeUnit) {
+  console.log("serviceRows:", serviceRows)
   const pricing        = company.billing_rules?.service_pricing ?? {};
   const { minMonthlyCost = 0, currency = 'USD' } = company;
 
@@ -91,7 +100,7 @@ export function applyServicePricing(serviceRows, company, timeUnit) {
   for (const row of serviceRows) {
     // BigQuery date objects arrive as { value: 'YYYY-MM-DD' }; dummy data as plain strings
     const ps = typeof row.period_start === 'object' ? row.period_start.value : String(row.period_start);
-    if (!periodMap.has(ps)) periodMap.set(ps, { transaction_count: 0, payment: 0 });
+    if (!periodMap.has(ps)) periodMap.set(ps, { transaction_count: 0, payment: 0, active_days: row.active_days ?? 0 });
     const p = periodMap.get(ps);
     p.transaction_count += Number(row.service_count);
     p.payment           += Number(row.service_count) * (pricing[row.service_name] ?? 0);
@@ -99,19 +108,20 @@ export function applyServicePricing(serviceRows, company, timeUnit) {
 
   return Array.from(periodMap.entries())
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([period_start, { transaction_count, payment }]) => ({
+    .map(([period_start, { transaction_count, payment, active_days }]) => ({
       period_start,
       time_label:        toTimeLabel(period_start, timeUnit),
       transaction_count: Math.round(transaction_count * 100) / 100,
       total_payment:     Math.max(minMonthlyCost, Math.round(payment * 100) / 100),
       currency,
+      active_days,
     }));
 }
 
 export function applyPricing(rows, company) {
   return rows.map(row => ({
     ...row,
-    total_payment: calculateMonthlyPayment(Number(row.transaction_count), company),
+    total_payment: calculateMonthlyPayment(Number(row.transaction_count), Number(row.active_days), company),
     currency: company.currency ?? 'USD',
   }));
 }
