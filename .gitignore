@@ -1,0 +1,6 @@
+# .gitignore
+node_modules/
+bigQuery.json
+.env
+dummyData.json
+data/companies.json

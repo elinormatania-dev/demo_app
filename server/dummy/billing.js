@@ -14,6 +14,20 @@ const ALL_EVENTS = (() => {
 const VALID_UNITS = ['YEAR', 'QUARTER', 'MONTH'];
 const DEFAULT_EVENT_NAME = 'send_create_session_request';
 
+/**
+ * Converts weighted_actions (new structured format) to weighted_events (legacy map format)
+ * so all downstream branching logic works unchanged.
+ */
+function resolveRules(rules) {
+  if (rules.weighted_actions?.length) {
+    const weighted_events = Object.fromEntries(
+      rules.weighted_actions.map(({ event_name, weight }) => [event_name, weight])
+    );
+    return { ...rules, weighted_events };
+  }
+  return rules;
+}
+
 function toMonthStart(eventTimestamp) {
   const d = new Date(eventTimestamp);
   const y = d.getFullYear();
@@ -62,13 +76,27 @@ export function getDummyBreakdown(companyId, periodStart, timeUnit, filters = {}
   if (!VALID_UNITS.includes(timeUnit)) {
     throw new Error(`Invalid timeUnit "${timeUnit}". Must be one of: ${VALID_UNITS.join(', ')}`);
   }
+  rules = resolveRules(rules);
 
-  const INTERNAL_SERVICES = new Set(['gateway', 'client_api', 'onboarding']);
-  const serviceSessions = new Map(); // service_name → Set<session_id>
+  const INTERNAL_SERVICES  = new Set(['gateway', 'client_api', 'onboarding']);
+  const serviceSessions    = new Map(); // service_name → Set<session_id>
+  const servicePricing     = rules.service_pricing;
   const serviceNameFilters = rules.service_name_filters;
   const weightedEvents     = rules.weighted_events;
 
-  if (serviceNameFilters) {
+  if (servicePricing && Object.keys(servicePricing).length > 0) {
+    const billableServices = new Set(Object.keys(servicePricing));
+    for (const event of ALL_EVENTS) {
+      if (event.company_id !== companyId) continue;
+      if (!billableServices.has(event.service_name)) continue;
+      if (!matchesFilters(event, filters)) continue;
+      const evtPeriod = toPeriodStart(toMonthStart(event.event_timestamp), timeUnit);
+      if (evtPeriod !== periodStart) continue;
+      const svc = event.service_name;
+      if (!serviceSessions.has(svc)) serviceSessions.set(svc, new Set());
+      serviceSessions.get(svc).add(event.session_id);
+    }
+  } else if (serviceNameFilters) {
     for (const event of ALL_EVENTS) {
       if (event.company_id !== companyId) continue;
       if (!serviceNameFilters.includes(event.service_name)) continue;
@@ -122,6 +150,32 @@ export function getDummyBreakdown(companyId, periodStart, timeUnit, filters = {}
 export function getDummyBillingData(companyId, timeUnit, filters = {}, rules = {}) {
   if (!VALID_UNITS.includes(timeUnit)) {
     throw new Error(`Invalid timeUnit "${timeUnit}". Must be one of: ${VALID_UNITS.join(', ')}`);
+  }
+  rules = resolveRules(rules);
+
+  // service_pricing path — returns [{period_start, service_name, service_count}]
+  // (matching the shape of generateServiceCountsQuery); applyServicePricing handles aggregation
+  const servicePricing = rules.service_pricing;
+  if (servicePricing && Object.keys(servicePricing).length > 0) {
+    const billableServices      = new Set(Object.keys(servicePricing));
+    const periodServiceSessions = new Map(); // `${periodStart}::${service_name}` → Set<session_id>
+
+    for (const event of ALL_EVENTS) {
+      if (event.company_id !== companyId) continue;
+      if (!billableServices.has(event.service_name)) continue;
+      if (!matchesFilters(event, filters)) continue;
+      const periodStart = toPeriodStart(toMonthStart(event.event_timestamp), timeUnit);
+      const key         = `${periodStart}::${event.service_name}`;
+      if (!periodServiceSessions.has(key)) periodServiceSessions.set(key, new Set());
+      periodServiceSessions.get(key).add(event.session_id);
+    }
+
+    return Array.from(periodServiceSessions.entries())
+      .map(([key, sessions]) => {
+        const [period_start, service_name] = key.split('::');
+        return { period_start, service_name, service_count: sessions.size };
+      })
+      .sort((a, b) => a.period_start.localeCompare(b.period_start));
   }
 
   const serviceNameFilters = rules.service_name_filters;

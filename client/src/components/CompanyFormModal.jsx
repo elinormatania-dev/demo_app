@@ -1,6 +1,6 @@
 import { useForm, useFieldArray } from 'react-hook-form';
 import { useState } from 'react';
-import { createCompany, updateCompany } from '../api.js';
+import { createCompany, updateCompany, getCompanies } from '../api.js';
 
 const TYPE_OF_ACTION_LABELS = {
   sessionReturnToCustomer: 'Session returned to customer',
@@ -13,10 +13,13 @@ const TYPE_OF_ACTION_LABELS = {
   notDetailedInAgreement: 'Not detailed in agreement',
 };
 
+function generateSlug(name) {
+  return name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+}
+
 function toFormValues(c) {
   return {
     companyname: c?.companyname ?? '',
-    companyID: c?.companyID ?? '',
     bqCompanyId: c?.bqCompanyId ?? '',
     services: (c?.services ?? []).join(', '),
     currency: c?.currency ?? 'ILS',
@@ -31,22 +34,13 @@ function toFormValues(c) {
       actionCurrency: l.actionCurrency,
     })),
     billing_rules: {
-      pricing_model: c?.billing_rules?.pricing_model ?? '',
-      action_expression: c?.billing_rules?.action_expression ?? '',
-      additional_filters: c?.billing_rules?.additional_filters ?? '',
-      event_name_filter: c?.billing_rules?.event_name_filter ?? '',
+      pricing_model:        c?.billing_rules?.pricing_model ?? '',
+      service_pricing:      Object.entries(c?.billing_rules?.service_pricing ?? {})
+        .map(([service_name, price]) => ({ service_name, price })),
       service_name_filters: (c?.billing_rules?.service_name_filters ?? []).join(', '),
+      event_name_filter:    c?.billing_rules?.event_name_filter ?? '',
     },
-    typeOfAction: {
-      sessionReturnToCustomer: c?.typeOfAction?.sessionReturnToCustomer ?? false,
-      oneComponentWorkedWithoutReturn: c?.typeOfAction?.oneComponentWorkedWithoutReturn ?? false,
-      chargeRegardlessOfReturn: c?.typeOfAction?.chargeRegardlessOfReturn ?? false,
-      anyTouchAnyCharge: c?.typeOfAction?.anyTouchAnyCharge ?? false,
-      comboDependent: c?.typeOfAction?.comboDependent ?? false,
-      usingOneServiceOrMore: c?.typeOfAction?.usingOneServiceOrMore ?? false,
-      openAccount: c?.typeOfAction?.openAccount ?? false,
-      notDetailedInAgreement: c?.typeOfAction?.notDetailedInAgreement ?? false,
-    },
+    typeOfAction: Object.keys(c?.typeOfAction ?? {}).find(k => c.typeOfAction[k]) ?? '',
   };
 }
 
@@ -65,15 +59,31 @@ export default function CompanyFormModal({ mode, company, onClose, onSaved }) {
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: 'levels' });
+  const { fields: spFields, append: spAppend, remove: spRemove } =
+    useFieldArray({ control, name: 'billing_rules.service_pricing' });
 
   async function onSubmit(data) {
     setApiError(null);
 
     const br = data.billing_rules;
-    const hasRules = br.pricing_model || br.action_expression || br.additional_filters ||
+    const hasRules = br.pricing_model || br.service_pricing?.length ||
       br.event_name_filter || br.service_name_filters;
 
+    let companyID;
+    if (mode === 'create') {
+      const existing = await getCompanies();
+      const existingIds = new Set(existing.map(c => c.companyID));
+      const base = generateSlug(data.companyname);
+      companyID = base;
+      let i = 1;
+      while (existingIds.has(companyID)) {
+        companyID = `${base}_${String(i).padStart(3, '0')}`;
+        i++;
+      }
+    }
+
     const payload = {
+      ...(mode === 'create' && { companyID }),
       ...data,
       services: data.services.split(',').map(s => s.trim()).filter(Boolean),
       levels: data.levels.map((l, i) => ({
@@ -86,8 +96,13 @@ export default function CompanyFormModal({ mode, company, onClose, onSaved }) {
       ...(hasRules ? {
         billing_rules: {
           ...(br.pricing_model && { pricing_model: br.pricing_model }),
-          ...(br.action_expression && { action_expression: br.action_expression }),
-          ...(br.additional_filters && { additional_filters: br.additional_filters }),
+          ...(br.service_pricing?.length && {
+            service_pricing: Object.fromEntries(
+              br.service_pricing
+                .filter(row => row.service_name?.trim())
+                .map(row => [row.service_name.trim(), Number(row.price)])
+            ),
+          }),
           ...(br.event_name_filter && { event_name_filter: br.event_name_filter }),
           ...(br.service_name_filters && {
             service_name_filters: br.service_name_filters.split(',').map(s => s.trim()).filter(Boolean),
@@ -97,6 +112,9 @@ export default function CompanyFormModal({ mode, company, onClose, onSaved }) {
     };
     if (!payload.billing_rules) delete payload.billing_rules;
     if (!payload.bqCompanyId) delete payload.bqCompanyId;
+    payload.typeOfAction = Object.fromEntries(
+      Object.keys(TYPE_OF_ACTION_LABELS).map(k => [k, k === data.typeOfAction])
+    );
 
     try {
       if (mode === 'create') {
@@ -135,15 +153,6 @@ export default function CompanyFormModal({ mode, company, onClose, onSaved }) {
                 {errors.companyname && <p className="text-xs text-red-500 mt-1">{errors.companyname.message}</p>}
               </div>
               <div>
-                <label className={label}>Company ID *</label>
-                <input
-                  {...register('companyID', { required: 'Required' })}
-                  readOnly={mode === 'edit'}
-                  className={input + (mode === 'edit' ? ' bg-gray-50 text-gray-400 cursor-not-allowed' : '')}
-                />
-                {errors.companyID && <p className="text-xs text-red-500 mt-1">{errors.companyID.message}</p>}
-              </div>
-              <div>
                 <label className={label}>Services (comma-separated)</label>
                 <input {...register('services')} placeholder="OCR, LIVENESS" className={input} />
               </div>
@@ -169,10 +178,6 @@ export default function CompanyFormModal({ mode, company, onClose, onSaved }) {
               <div>
                 <label className={label}>Min Monthly Actions</label>
                 <input type="number" {...register('minimumMonthlyActions', { valueAsNumber: true })} className={input} />
-              </div>
-              <div>
-                <label className={label}>Single Action Cost</label>
-                <input type="number" step="0.01" {...register('SingalActionCost', { valueAsNumber: true })} className={input} />
               </div>
               <div>
                 <label className={label}>Min Monthly Cost</label>
@@ -245,31 +250,61 @@ export default function CompanyFormModal({ mode, company, onClose, onSaved }) {
                 <label className={label}>Pricing Model</label>
                 <select {...register('billing_rules.pricing_model')} className={input}>
                   <option value="">— none —</option>
-                  <option value="flat">flat</option>
-                  <option value="tiered_volume">tiered_volume</option>
-                  <option value="tiered_marginal">tiered_marginal</option>
+                  <option value="flat">Fixed Price per Action</option>
+                  <option value="tiered_volume">Volume Discount (Applied to all units)</option>
+                  <option value="tiered_marginal">Progressive Tiers</option>
                 </select>
               </div>
+
+              {/* Service Pricing */}
               <div className="col-span-2">
-                <label className={label}>Action Expression (SQL)</label>
-                <textarea
-                  {...register('billing_rules.action_expression')}
-                  rows={2}
-                  className={input + ' resize-none font-mono text-xs'}
-                  placeholder="COUNT(DISTINCT CASE WHEN event_name = 'send_create_session_request' THEN session_id END)"
-                />
+                <div className="flex items-center justify-between mb-2">
+                  <label className={label}>Service Pricing</label>
+                  <button
+                    type="button"
+                    onClick={() => spAppend({ service_name: '', price: 0 })}
+                    className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+                  >
+                    + Add Service
+                  </button>
+                </div>
+                {spFields.length === 0 && (
+                  <p className="text-xs text-gray-400">No service pricing — uses base action cost or tiered pricing.</p>
+                )}
+                {spFields.map((field, i) => (
+                  <div key={field.id} className="grid grid-cols-[2fr_1fr_auto] gap-2 mb-2 items-end">
+                    <div>
+                      <label className={label}>Service Name</label>
+                      <input
+                        {...register(`billing_rules.service_pricing.${i}.service_name`, { required: 'Required' })}
+                        placeholder="ocr"
+                        className={input}
+                      />
+                    </div>
+                    <div>
+                      <label className={label}>Price</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        {...register(`billing_rules.service_pricing.${i}.price`, { valueAsNumber: true })}
+                        className={input}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => spRemove(i)}
+                      className="text-red-400 hover:text-red-600 pb-2 text-lg leading-none"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
               </div>
+
               <div>
-                <label className={label}>Additional Filters (SQL)</label>
-                <input {...register('billing_rules.additional_filters')} className={input} placeholder="AND status = 'SUCCESS'" />
-              </div>
-              <div>
-                <label className={label}>Event Name Filter</label>
-                <input {...register('billing_rules.event_name_filter')} className={input} placeholder="send_create_session_request" />
-              </div>
-              <div className="col-span-2">
-                <label className={label}>Service Name Filters (comma-separated)</label>
-                <input {...register('billing_rules.service_name_filters')} className={input} placeholder="ocr, liveness" />
+                <label className={label}>Base Action Cost <span className="text-gray-400 font-normal">(flat / tiered billing)</span></label>
+                <input type="number" step="0.01" {...register('SingalActionCost', { valueAsNumber: true })} className={input} />
               </div>
             </div>
           </section>
@@ -280,7 +315,7 @@ export default function CompanyFormModal({ mode, company, onClose, onSaved }) {
             <div className="grid grid-cols-2 gap-2">
               {Object.entries(TYPE_OF_ACTION_LABELS).map(([key, lbl]) => (
                 <label key={key} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                  <input type="checkbox" {...register(`typeOfAction.${key}`)} className="rounded" />
+                  <input type="radio" {...register('typeOfAction')} value={key} />
                   {lbl}
                 </label>
               ))}

@@ -237,16 +237,13 @@
     "companyID": "ibi_006",
     "bqCompanyId": "6742fb13ac84281f527c322e",
     "billing_rules": {
-      "action_expression": "COUNT(DISTINCT CASE WHEN event_name = 'send_create_session_request' THEN session_id END) + 0.5 * COUNT(DISTINCT CASE WHEN event_name = 'liveness_session_init_request' THEN session_id END) + 0.5 * COUNT(DISTINCT CASE WHEN event_name = 'stt_recording_started' THEN session_id END) + 0.5 * COUNT(DISTINCT CASE WHEN event_name = 'face_match_responded_for_images' THEN session_id END)",
-      "additional_filters": "AND event_name IN ('send_create_session_request','liveness_session_init_request','stt_recording_started','face_match_responded_for_images')",
-      "weighted_events": {
-        "send_create_session_request": 1,
-        "liveness_session_init_request": 0.5,
-        "stt_recording_started": 0.5,
-        "face_match_responded_for_images": 0.5
-      },
-      "pricing_model": "flat_with_deduction",
-      "base_deduction": 2250
+      "pricing_model": "flat",
+      "service_pricing": {
+        "ocr":             2,
+        "liveness":        1,
+        "video_statement": 1,
+        "face_match":      1
+      }
     },
     "services": ["OCR", "LIVENESS", "STT", "BIO"],
     "service_options": [
@@ -257,7 +254,7 @@
     ],
     "annualFixedPayment": 0,
     "minimumMonthlyActions": 1125,
-    "SingalActionCost": 1,
+    "SingalActionCost": 2,
     "currency": "USD",
     "minMonthlyCost": 2250,
     "levels": [],

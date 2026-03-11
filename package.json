@@ -9,8 +9,10 @@
   },
   "dependencies": {
     "@google-cloud/bigquery": "^8.1.1",
+    "dom-to-image-more": "^3.7.2",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "jspdf": "^4.2.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-hook-form": "^7.54.2",

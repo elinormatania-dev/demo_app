@@ -1,10 +1,12 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { getBillingCompanies, getBillingData, getCompanies } from '../api.js';
 import KpiCard from './KpiCard.jsx';
 import BillingChart from './BillingChart.jsx';
 import FilterBar from './FilterBar.jsx';
 import ServiceBreakdownModal from './ServiceBreakdownModal.jsx';
 import CompanyFormModal from './CompanyFormModal.jsx';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default function BillingDashboard() {
   const [companies, setCompanies] = useState([]);
@@ -18,6 +20,8 @@ export default function BillingDashboard() {
   const [selectedRow, setSelectedRow] = useState(null);
   const [modalMode, setModalMode] = useState(null); // 'create' | 'edit' | null
   const [editCompany, setEditCompany] = useState(null);
+  const [pdfExporting, setPdfExporting] = useState(false);
+  const reportRef = useRef(null);
 
   const refreshCompanies = useCallback(() => {
     getBillingCompanies()
@@ -44,6 +48,54 @@ export default function BillingDashboard() {
       setModalMode('edit');
     } catch {
       setError('Failed to load company data for editing.');
+    }
+  }
+
+  async function handleExportPDF() {
+    console.log('[PDF] starting export, ref:', reportRef.current);
+    if (!reportRef.current) { alert('Report ref not found'); return; }
+    setPdfExporting(true);
+    try {
+      console.log('[PDF] calling html2canvas...');
+      const canvas = await html2canvas(reportRef.current, { scale: 2, useCORS: true });
+      console.log('[PDF] canvas size:', canvas.width, 'x', canvas.height);
+      const imgData = canvas.toDataURL('image/png');
+
+      console.log('[PDF] creating jsPDF instance, jsPDF=', jsPDF);
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const margin = 32;
+
+      pdf.setFontSize(18);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(selectedCompany.name, margin, 40);
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(100);
+      pdf.text(
+        `Monthly Billing Report  •  ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}`,
+        margin, 56
+      );
+      pdf.setDrawColor(200);
+      pdf.line(margin, 64, pageW - margin, 64);
+      pdf.setTextColor(0);
+
+      const contentY = 76;
+      const contentH = pageH - contentY - margin;
+      const imgW = pageW - margin * 2;
+      const imgH = (canvas.height / canvas.width) * imgW;
+      const finalH = Math.min(imgH, contentH);
+      pdf.addImage(imgData, 'PNG', margin, contentY, imgW, finalH);
+
+      console.log('[PDF] saving...');
+      pdf.save(`${selectedCompany.name}_billing_report.pdf`);
+      console.log('[PDF] done');
+    } catch (err) {
+      console.error('[PDF] error:', err);
+      alert(`PDF export failed: ${err.message}`);
+    } finally {
+      setPdfExporting(false);
     }
   }
 
@@ -110,12 +162,36 @@ export default function BillingDashboard() {
             </button>
           );
         })}
-        <button
-          onClick={() => setModalMode('create')}
-          className="ml-auto mb-0.5 px-4 py-2 text-sm font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors"
-        >
-          + Add Company
-        </button>
+        <div className="ml-auto flex items-center gap-2 mb-0.5">
+          <button
+            onClick={handleExportPDF}
+            disabled={pdfExporting || loading}
+            className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+          >
+            {pdfExporting ? (
+              <>
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                </svg>
+                Generating…
+              </>
+            ) : (
+              <>
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a1 1 0 001 1h16a1 1 0 001-1v-3" />
+                </svg>
+                Download PDF
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => setModalMode('create')}
+            className="px-4 py-2 text-sm font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors"
+          >
+            + Add Company
+          </button>
+        </div>
       </div>
 
       {/* Filter bar */}
@@ -135,6 +211,9 @@ export default function BillingDashboard() {
           {error}
         </div>
       )}
+
+      {/* Report content (captured for PDF export) */}
+      <div ref={reportRef}>
 
       {/* KPI cards */}
       {!loading && !error && (
@@ -206,6 +285,8 @@ export default function BillingDashboard() {
           </table>
         </div>
       )}
+
+      </div>{/* end reportRef */}
 
       {selectedRow && (
         <ServiceBreakdownModal

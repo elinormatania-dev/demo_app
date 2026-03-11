@@ -2,9 +2,9 @@ import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { bigquery } from './bigquery.js';
-import { generateBillingQuery, generateBreakdownQuery } from '../queries/billing.js';
+import { generateBillingQuery, generateBreakdownQuery, generateServiceCountsQuery } from '../queries/billing.js';
 import { getDummyBillingData, getDummyBreakdown } from '../dummy/billing.js';
-import { applyPricing } from './pricing.js';
+import { applyPricing, applyServicePricing } from './pricing.js';
 import * as cache from '../middleware/cache.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -53,6 +53,8 @@ export async function getBreakdown(companyId, periodStart, timeUnit, filters = {
 export async function getBillingData(companyId, timeUnit = 'MONTH', filters = {}) {
   const company = getCompany(companyId);
   const rules   = company?.billing_rules ?? {};
+  const servicePricing = rules.service_pricing;
+  const hasServicePricing = servicePricing && Object.keys(servicePricing).length > 0;
 
   // Cache stores raw counts so pricing changes don't require cache invalidation
   const cacheKey = cache.key('billing', { companyId, timeUnit, ...filters });
@@ -60,12 +62,19 @@ export async function getBillingData(companyId, timeUnit = 'MONTH', filters = {}
     if (process.env.USE_DUMMY_DATA === 'true') {
       return getDummyBillingData(companyId, timeUnit, filters, rules);
     }
+    if (hasServicePricing) {
+      const query  = generateServiceCountsQuery(timeUnit, filters, servicePricing);
+      const params = { companyId, ...filters };
+      const [rows] = await bigquery.query({ query, params, location: 'US' });
+      return rows;
+    }
     const query  = generateBillingQuery(timeUnit, filters, rules);
     const params = { companyId, ...filters };
     const [rows] = await bigquery.query({ query, params, location: 'US' });
     return rows;
   });
 
-  // Apply pricing outside the cache — changing tiers takes effect immediately on restart
-  return company ? applyPricing(rawRows, company) : rawRows;
+  if (!company) return rawRows;
+  if (hasServicePricing) return applyServicePricing(rawRows, company, timeUnit);
+  return applyPricing(rawRows, company);
 }
