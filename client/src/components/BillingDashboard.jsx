@@ -6,7 +6,7 @@ import FilterBar from './FilterBar.jsx';
 import ServiceBreakdownModal from './ServiceBreakdownModal.jsx';
 import CompanyFormModal from './CompanyFormModal.jsx';
 import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+import domtoimage from 'dom-to-image-more';
 
 export default function BillingDashboard() {
   const [companies, setCompanies] = useState([]);
@@ -21,6 +21,7 @@ export default function BillingDashboard() {
   const [modalMode, setModalMode] = useState(null); // 'create' | 'edit' | null
   const [editCompany, setEditCompany] = useState(null);
   const [pdfExporting, setPdfExporting] = useState(false);
+  const [billingVersion, setBillingVersion] = useState(0);
   const reportRef = useRef(null);
 
   const refreshCompanies = useCallback(() => {
@@ -56,12 +57,15 @@ export default function BillingDashboard() {
     if (!reportRef.current) { alert('Report ref not found'); return; }
     setPdfExporting(true);
     try {
-      console.log('[PDF] calling html2canvas...');
-      const canvas = await html2canvas(reportRef.current, { scale: 2, useCORS: true });
-      console.log('[PDF] canvas size:', canvas.width, 'x', canvas.height);
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = await domtoimage.toPng(reportRef.current, { scale: 2 });
 
-      console.log('[PDF] creating jsPDF instance, jsPDF=', jsPDF);
+      const img = await new Promise((res, rej) => {
+        const i = new Image();
+        i.onload = () => res(i);
+        i.onerror = rej;
+        i.src = imgData;
+      });
+
       const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
@@ -84,7 +88,7 @@ export default function BillingDashboard() {
       const contentY = 76;
       const contentH = pageH - contentY - margin;
       const imgW = pageW - margin * 2;
-      const imgH = (canvas.height / canvas.width) * imgW;
+      const imgH = (img.naturalHeight / img.naturalWidth) * imgW;
       const finalH = Math.min(imgH, contentH);
       pdf.addImage(imgData, 'PNG', margin, contentY, imgW, finalH);
 
@@ -108,7 +112,7 @@ export default function BillingDashboard() {
       .then(setRows)
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-  }, [selectedCompany?.companyId, timeUnit, appliedFilters]);
+  }, [selectedCompany?.companyId, timeUnit, appliedFilters, billingVersion]);
 
   const kpis = useMemo(() => {
     const totalTransactions = rows.reduce((s, r) => s + Number(r.transaction_count), 0);
@@ -302,7 +306,7 @@ export default function BillingDashboard() {
           mode={modalMode}
           company={modalMode === 'edit' ? editCompany : null}
           onClose={() => { setModalMode(null); setEditCompany(null); }}
-          onSaved={refreshCompanies}
+          onSaved={() => { refreshCompanies(); setBillingVersion(v => v + 1); }}
         />
       )}
     </div>

@@ -1,16 +1,16 @@
-import { useForm, useFieldArray } from 'react-hook-form';
-import { useState } from 'react';
+import { useForm, useFieldArray, useWatch } from 'react-hook-form';
+import { useState, useEffect } from 'react';
 import { createCompany, updateCompany, getCompanies } from '../api.js';
 
 const TYPE_OF_ACTION_LABELS = {
   sessionReturnToCustomer: 'Session returned to customer',
-  oneComponentWorkedWithoutReturn: 'One component worked without return',
-  chargeRegardlessOfReturn: 'Charge regardless of return',
+  //oneComponentWorkedWithoutReturn: 'One component worked without return',
+  //chargeRegardlessOfReturn: 'Charge regardless of return',
   anyTouchAnyCharge: 'Any touch, any charge',
-  comboDependent: 'Combo dependent',
+  //comboDependent: 'Combo dependent',
   usingOneServiceOrMore: 'Using one service or more',
-  openAccount: 'Open account',
-  notDetailedInAgreement: 'Not detailed in agreement',
+  //openAccount: 'Open account',
+  //notDetailedInAgreement: 'Not detailed in agreement',
 };
 
 function generateSlug(name) {
@@ -54,9 +54,18 @@ const sectionTitle = 'text-sm font-bold text-gray-700 mb-3 pb-1 border-b border-
 export default function CompanyFormModal({ mode, company, onClose, onSaved }) {
   const [apiError, setApiError] = useState(null);
 
-  const { register, control, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+  const { register, control, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm({
     defaultValues: toFormValues(company),
   });
+
+  const minMonthlyCost        = useWatch({ control, name: 'minMonthlyCost' });
+  const minimumMonthlyActions = useWatch({ control, name: 'minimumMonthlyActions' });
+
+  useEffect(() => {
+    if (minimumMonthlyActions > 0) {
+      setValue('SingalActionCost', Math.round((minMonthlyCost / minimumMonthlyActions) * 10000) / 10000);
+    }
+  }, [minMonthlyCost, minimumMonthlyActions, setValue]);
 
   const { fields, append, remove } = useFieldArray({ control, name: 'levels' });
   const { fields: spFields, append: spAppend, remove: spRemove } =
@@ -83,7 +92,7 @@ export default function CompanyFormModal({ mode, company, onClose, onSaved }) {
     }
 
     const payload = {
-      ...(mode === 'create' && { companyID }),
+      ...(mode === 'create' ? { companyID } : { companyID: company.companyID }),
       ...data,
       services: data.services.split(',').map(s => s.trim()).filter(Boolean),
       levels: data.levels.map((l, i) => ({
@@ -110,7 +119,7 @@ export default function CompanyFormModal({ mode, company, onClose, onSaved }) {
         },
       } : {}),
     };
-    if (!payload.billing_rules) delete payload.billing_rules;
+    if (!hasRules) delete payload.billing_rules;
     if (!payload.bqCompanyId) delete payload.bqCompanyId;
     payload.typeOfAction = Object.fromEntries(
       Object.keys(TYPE_OF_ACTION_LABELS).map(k => [k, k === data.typeOfAction])
@@ -243,15 +252,20 @@ export default function CompanyFormModal({ mode, company, onClose, onSaved }) {
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={label}>BQ Company ID</label>
-                <input {...register('bqCompanyId')} className={input} placeholder="67e24df6ec44cf1de85aabe8" />
+                <label className={label}>BQ Company ID <span className="text-red-500">*</span></label>
+                <input
+                  {...register('bqCompanyId', { required: 'Required — without this the company won\'t appear in billing tabs' })}
+                  className={input}
+                  placeholder="67e24df6ec44cf1de85aabe8"
+                />
+                {errors.bqCompanyId && <p className="text-xs text-red-500 mt-1">{errors.bqCompanyId.message}</p>}
               </div>
               <div>
                 <label className={label}>Pricing Model</label>
                 <select {...register('billing_rules.pricing_model')} className={input}>
                   <option value="">— none —</option>
                   <option value="flat">Fixed Price per Action</option>
-                  <option value="tiered_volume">Volume Discount (Applied to all units)</option>
+                  {/* <option value="tiered_volume">Volume Discount (Applied to all units)</option> */}
                   <option value="tiered_marginal">Progressive Tiers</option>
                 </select>
               </div>

@@ -6,13 +6,18 @@ import { parseTimeUnit, parseDateFilters, requireParam } from '../middleware/val
 import { getBillingData, getBreakdown } from '../services/billing.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const EVENT_COMPANIES_FILE = join(__dirname, '../data/eventCompanies.json');
+const COMPANIES_FILE = join(__dirname, '../data/companies.json');
 
 const router = Router();
 
-// GET /api/billing/companies — list of companies that have BQ event data
+// GET /api/billing/companies — companies with a bqCompanyId (have BQ event data)
 router.get('/companies', (req, res) => {
-  res.json(JSON.parse(readFileSync(EVENT_COMPANIES_FILE, 'utf-8')));
+  const all = JSON.parse(readFileSync(COMPANIES_FILE, 'utf-8'));
+  res.json(
+    all
+      .filter(c => c.bqCompanyId)
+      .map(c => ({ name: c.companyname, companyId: c.bqCompanyId }))
+  );
 });
 
 // GET /api/billing/:companyId/breakdown?period=2026-01-01&timeUnit=MONTH[&serviceName=ocr]
