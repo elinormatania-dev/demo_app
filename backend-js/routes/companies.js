@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { readFileSync, writeFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { BillingConfigSchema } from '../../companisZod.js';
+import { BillingConfigSchema } from '../companisZod.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_FILE = join(__dirname, '../data/companies.json');

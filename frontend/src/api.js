@@ -1,4 +1,7 @@
-const BASE = '/api/companies';
+const NODE_API   = 'http://localhost:3001';
+// For Python endpoints: const PYTHON_API = 'http://localhost:8000';
+
+const BASE = `${NODE_API}/api/companies`;
 
 export async function getCompanies() {
   const res = await fetch(BASE);
@@ -41,7 +44,7 @@ export async function deleteCompany(id) {
 
 // Returns [{ name, companyId }] — the companies that have BQ event data
 export async function getBillingCompanies() {
-  const res = await fetch('/api/billing/companies');
+  const res = await fetch(`${NODE_API}/api/billing/companies`);
   if (!res.ok) throw new Error('Failed to fetch billing companies');
   return res.json();
 }
@@ -51,14 +54,14 @@ export async function getBillingData(companyId, timeUnit = 'MONTH', filters = {}
   if (filters.serviceName) params.set('serviceName', filters.serviceName);
   if (filters.dateFrom) params.set('dateFrom', filters.dateFrom);
   if (filters.dateTo) params.set('dateTo', filters.dateTo);
-  const res = await fetch(`/api/billing/${encodeURIComponent(companyId)}?${params}`);
+  const res = await fetch(`${NODE_API}/api/billing/${encodeURIComponent(companyId)}?${params}`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
 export async function getBreakdown(companyId, periodStart, timeUnit) {
   const res = await fetch(
-    `/api/billing/${encodeURIComponent(companyId)}/breakdown?period=${periodStart}&timeUnit=${timeUnit}`
+    `${NODE_API}/api/billing/${encodeURIComponent(companyId)}/breakdown?period=${periodStart}&timeUnit=${timeUnit}`
   );
   if (!res.ok) throw new Error(await res.text());
   return res.json();

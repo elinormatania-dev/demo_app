@@ -6,7 +6,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Load once at startup — supports both NDJSON (BQ export, one object per line) and JSON array
 const ALL_EVENTS = (() => {
-  const raw = readFileSync(join(__dirname, '../../dummyData.json'), 'utf-8').trim();
+  const raw = readFileSync(join(__dirname, '../dummyData.json'), 'utf-8').trim();
   if (raw.startsWith('[')) return JSON.parse(raw);
   return raw.split('\n').filter(line => line.trim()).map(line => JSON.parse(line));
 })();
