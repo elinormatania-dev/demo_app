@@ -5,3 +5,8 @@ bigQuery.json
 dummyData.json
 data/companies.json
 server/cache
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
