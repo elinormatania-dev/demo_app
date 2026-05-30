@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 from models.company_configuration import CompanyContractConfiguration, BillingModel, Event
 from models.company_configuration import CompanyContractConfiguration, BillingModel, PaymentRules, Tier, ServiceName
-from services.big_query_service import BigQueryService
+from services.transaction_service import BigQueryService
 
 # def test_build_transaction_query():
 #     bq_company_id = "aaa"

@@ -4,3 +4,4 @@ pydantic
 python-dotenv
 motor
 pytest
+google-cloud-bigquery

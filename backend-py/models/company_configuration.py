@@ -95,7 +95,6 @@ EVENT_TO_EVENT_NAMES = {
 
    
 class CompanyContractConfiguration(BaseModel):
-    company_id: str
     contract_start_date: date
     contract_end_date: date
     billing_model: BillingModel # VOLUME_TIERED_WITH_MINIMUM
@@ -106,7 +105,7 @@ class CompanyContractConfiguration(BaseModel):
     prepaid_action_wallet: Optional[int] = None
 
 class CompanyConfiguration(BaseModel):
-    bq_company_id: str 
+    company_id: str
     company_name: str
     currency: Currency
     contract_configurations: List[CompanyContractConfiguration]
@@ -126,3 +125,7 @@ class CalculationResult(BaseModel):
     minimum_actions_enforced: int
     minimum_fee_enforced: float
     total_payment: float
+
+class CompanyDetails(BaseModel):
+    company_id: str
+    company_name: str
