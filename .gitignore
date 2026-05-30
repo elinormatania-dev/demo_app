@@ -8,6 +8,7 @@ server/cache
 .idea/
 __pycache__/
 venv/
+data/
 
 __pycache__/
 *.pyc

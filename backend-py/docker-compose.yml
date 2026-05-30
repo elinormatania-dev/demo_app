@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: companies_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./data/mongodb:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+
+  bigquery-emulator:
+    image: ghcr.io/goccy/bigquery-emulator:latest
+    container_name: bigquery-emulator
+
+    # Needed for Apple Silicon Macs
+    platform: linux/amd64
+
+    command: >
+      --project=test-project
+      --data-from-yaml=/data/seed.yaml
+      --database=/data/bigquery.db
+      --log-level=debug
+
+    ports:
+      - "9050:9050"
+      - "9060:9060"
+
+    volumes:
+      - ./data/bigquery/:/data/
+
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
