@@ -1,0 +1,551 @@
+[
+  {
+    "company_id": "67cd5c8b1f2ebdcbb439afa5",
+    "company_name": "MANI",
+    "active": true,
+    "currency": "ILS",
+    "contract_configurations": [
+      {
+        "contract_start_date": "2026-01-01",
+        "contract_end_date": "2027-01-01",
+        "billing_model": "itemized_usage",
+        "minimum_monthly_fee": 2500.0,
+        "fixed_yearly_fee": 0.0,
+        "payment_rules": [
+          {
+            "event_name": "ocr_started",
+            "overage_price_per_unit": 1.0,
+            "tiers": [{ "from_num_actions": 0, "up_to_num_actions": "unlimited", "price_per_unit": 1.0 }]
+          },
+          {
+            "event_name": "liveness_started",
+            "overage_price_per_unit": 0.5,
+            "tiers": [{ "from_num_actions": 0, "up_to_num_actions": "unlimited", "price_per_unit": 0.5 }]
+          },
+          {
+            "event_name": "stt_started",
+            "overage_price_per_unit": 0.5,
+            "tiers": [{ "from_num_actions": 0, "up_to_num_actions": "unlimited", "price_per_unit": 0.5 }]
+          },
+          {
+            "event_name": "bio_ended",
+            "overage_price_per_unit": 0.5,
+            "tiers": [{ "from_num_actions": 0, "up_to_num_actions": "unlimited", "price_per_unit": 0.5 }]
+          }
+        ]
+      }
+    ]
+  },
+
+  {
+    "company_id": "67272aec9ae7dc9629d16407",
+    "company_name": "Isracard",
+    "currency": "ILS",
+    "contract_configurations": [
+      {
+        "contract_start_date": "2026-01-01",
+        "contract_end_date": "2027-01-01",
+        "billing_model": "volume_tiered",
+        "minimum_monthly_fee": 7500.0,
+        "fixed_yearly_fee": 0.0,
+        "payment_rules": [
+          {
+            "event_name": "ocr_ended",
+            "flow_id": ["11"],
+            "overage_price_per_unit": 3.5,
+            "tiers": [
+              { "from_num_actions": 0, "up_to_num_actions": 3500, "price_per_unit": 5.0 },
+              { "from_num_actions": 3500, "up_to_num_actions": 6500, "price_per_unit": 4.5 },
+              { "from_num_actions": 6500, "up_to_num_actions": 10000, "price_per_unit": 4.0 },
+              { "from_num_actions": 10000, "up_to_num_actions": "unlimited", "price_per_unit": 3.5 }
+            ]
+          },
+          {
+            "event_name": "bio_ended",
+            "flow_id": ["8", "10"],
+            "overage_price_per_unit": 3.5,
+            "tiers": [
+              { "from_num_actions": 0, "up_to_num_actions": 3500, "price_per_unit": 5.0 },
+              { "from_num_actions": 3500, "up_to_num_actions": 6500, "price_per_unit": 4.5 },
+              { "from_num_actions": 6500, "up_to_num_actions": 10000, "price_per_unit": 4.0 },
+              { "from_num_actions": 10000, "up_to_num_actions": "unlimited", "price_per_unit": 3.5 }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+
+  {
+  "company_id": "68107d2be5de0a23a974ad8e",
+  "company_name": "PostalBank",
+  "currency": "USD",
+  "contract_configurations": [
+    {
+      "contract_start_date": "2024-01-01",
+      "contract_end_date": "2026-12-31",
+      "billing_model": "volume_tiered",
+      "minimum_monthly_fee": 2500.0,
+      "fixed_yearly_fee": 0.0,
+      "payment_rules": [
+        {
+          "event_name": "ocr_ended",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": 18000, "price_per_unit": 2.0 },
+            { "from_num_actions": 18000, "up_to_num_actions": 30000, "price_per_unit": 1.85 },
+            { "from_num_actions": 30000, "up_to_num_actions": 60000, "price_per_unit": 1.6 },
+            { "from_num_actions": 60000, "up_to_num_actions": 72000, "price_per_unit": 1.4 },
+            { "from_num_actions": 72000, "up_to_num_actions": "unlimited", "price_per_unit": 1.2 }
+          ]
+        },
+        {
+          "event_name": "bio_ended",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": 18000, "price_per_unit": 2.0 },
+            { "from_num_actions": 18000, "up_to_num_actions": 30000, "price_per_unit": 1.85 },
+            { "from_num_actions": 30000, "up_to_num_actions": 60000, "price_per_unit": 1.6 },
+            { "from_num_actions": 60000, "up_to_num_actions": 72000, "price_per_unit": 1.4 },
+            { "from_num_actions": 72000, "up_to_num_actions": "unlimited", "price_per_unit": 1.2 }
+          ]
+        },
+        {
+          "event_name": "liveness_started",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": 18000, "price_per_unit": 2.0 },
+            { "from_num_actions": 18000, "up_to_num_actions": 30000, "price_per_unit": 1.85 },
+            { "from_num_actions": 30000, "up_to_num_actions": 60000, "price_per_unit": 1.6 },
+            { "from_num_actions": 60000, "up_to_num_actions": 72000, "price_per_unit": 1.4 },
+            { "from_num_actions": 72000, "up_to_num_actions": "unlimited", "price_per_unit": 1.2 }
+          ]
+        },
+        {
+          "event_name": "stt_started",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": 18000, "price_per_unit": 2.0 },
+            { "from_num_actions": 18000, "up_to_num_actions": 30000, "price_per_unit": 1.85 },
+            { "from_num_actions": 30000, "up_to_num_actions": 60000, "price_per_unit": 1.6 },
+            { "from_num_actions": 60000, "up_to_num_actions": 72000, "price_per_unit": 1.4 },
+            { "from_num_actions": 72000, "up_to_num_actions": "unlimited", "price_per_unit": 1.2 }
+          ]
+        },
+        {
+          "event_name": "otp_started",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": 18000, "price_per_unit": 2.0 },
+            { "from_num_actions": 18000, "up_to_num_actions": 30000, "price_per_unit": 1.85 },
+            { "from_num_actions": 30000, "up_to_num_actions": 60000, "price_per_unit": 1.6 },
+            { "from_num_actions": 60000, "up_to_num_actions": 72000, "price_per_unit": 1.4 },
+            { "from_num_actions": 72000, "up_to_num_actions": "unlimited", "price_per_unit": 1.2 }
+          ]
+        }
+      ]
+    }
+  ]
+},
+
+  {
+  "company_id": "679b67f940108cf5bb4ad3df",
+  "company_name": "Bizi",
+  "currency": "USD",
+  "contract_configurations": [
+    {
+      "contract_start_date": "2024-01-01",
+      "contract_end_date": "2026-12-31",
+      "billing_model": "itemized_usage",
+      "minimum_monthly_fee": 1667.0,
+      "fixed_yearly_fee": 0.0,
+      "payment_rules": [
+        {
+          "event_name": "ocr_ended",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": "unlimited", "price_per_unit": 1.0 }
+          ]
+        },
+        {
+          "event_name": "bio_ended",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": "unlimited", "price_per_unit": 0.5 }
+          ]
+        },
+        {
+          "event_name": "liveness_started",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": "unlimited", "price_per_unit": 0.5 }
+          ]
+        }
+      ]
+    }
+  ]
+},
+
+  {
+  "company_id": "68861496964de006358280d1",
+  "company_name": "Upcapital",
+  "currency": "ILS",
+  "contract_configurations": [
+    {
+      "contract_start_date": "2024-01-01",
+      "contract_end_date": "2026-12-31",
+      "billing_model": "itemized_usage",
+      "minimum_monthly_fee": 6666.67,
+      "fixed_yearly_fee": 0.0,
+      "payment_rules": [
+        {
+          "event_name": "ocr_ended",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": 25000, "price_per_unit": 3.5 },
+            { "from_num_actions": 25000, "up_to_num_actions": 50000, "price_per_unit": 2.5 },
+            { "from_num_actions": 50000, "up_to_num_actions": "unlimited", "price_per_unit": 2.0 }
+          ]
+        },
+        {
+          "event_name": "liveness_started",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": 25000, "price_per_unit": 3.5 },
+            { "from_num_actions": 25000, "up_to_num_actions": 50000, "price_per_unit": 3.0 },
+            { "from_num_actions": 50000, "up_to_num_actions": "unlimited", "price_per_unit": 2.5 }
+          ]
+        },
+        {
+          "event_name": "bio_ended",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": 25000, "price_per_unit": 3.5 },
+            { "from_num_actions": 25000, "up_to_num_actions": 50000, "price_per_unit": 3.0 },
+            { "from_num_actions": 50000, "up_to_num_actions": "unlimited", "price_per_unit": 2.5 }
+          ]
+        },
+        {
+          "event_name": "stt_started",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": 25000, "price_per_unit": 2.0 },
+            { "from_num_actions": 25000, "up_to_num_actions": 50000, "price_per_unit": 1.65 },
+            { "from_num_actions": 50000, "up_to_num_actions": "unlimited", "price_per_unit": 1.4 }
+          ]
+        }
+      ]
+    }
+  ]
+},
+
+  {
+  "company_id": "67e24df6ec44cf1de85aabe8",
+  "company_name": "Cal",
+  "currency": "ILS",
+  "contract_configurations": [
+    {
+      "contract_start_date": "2024-01-01",
+      "contract_end_date": "2026-12-31",
+      "billing_model": "itemized_usage",
+      "minimum_monthly_fee": 7500.0,
+      "fixed_yearly_fee": 0.0,
+      "payment_rules": [
+        {
+          "event_name": "ocr_ended",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": 3500, "price_per_unit": 3.4 },
+            { "from_num_actions": 3500, "up_to_num_actions": 6500, "price_per_unit": 3.1 },
+            { "from_num_actions": 6500, "up_to_num_actions": 10000, "price_per_unit": 2.7 },
+            { "from_num_actions": 10000, "up_to_num_actions": 18000, "price_per_unit": 2.4 },
+            { "from_num_actions": 18000, "up_to_num_actions": 26000, "price_per_unit": 2.1 },
+            { "from_num_actions": 26000, "up_to_num_actions": 35000, "price_per_unit": 1.7 },
+            { "from_num_actions": 35000, "up_to_num_actions": "unlimited", "price_per_unit": 1.5 }
+          ]
+        },
+        {
+          "event_name": "bio_ended",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": 3500, "price_per_unit": 5.0 },
+            { "from_num_actions": 3500, "up_to_num_actions": 6500, "price_per_unit": 4.5 },
+            { "from_num_actions": 6500, "up_to_num_actions": 10000, "price_per_unit": 4.0 },
+            { "from_num_actions": 10000, "up_to_num_actions": 18000, "price_per_unit": 3.6 },
+            { "from_num_actions": 18000, "up_to_num_actions": 26000, "price_per_unit": 3.2 },
+            { "from_num_actions": 26000, "up_to_num_actions": 35000, "price_per_unit": 2.8 },
+            { "from_num_actions": 35000, "up_to_num_actions": "unlimited", "price_per_unit": 2.5 }
+          ]
+        },
+        {
+          "event_name": "liveness_started",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": 3500, "price_per_unit": 5.0 },
+            { "from_num_actions": 3500, "up_to_num_actions": 6500, "price_per_unit": 4.5 },
+            { "from_num_actions": 6500, "up_to_num_actions": 10000, "price_per_unit": 4.0 },
+            { "from_num_actions": 10000, "up_to_num_actions": 18000, "price_per_unit": 3.6 },
+            { "from_num_actions": 18000, "up_to_num_actions": 26000, "price_per_unit": 3.2 },
+            { "from_num_actions": 26000, "up_to_num_actions": 35000, "price_per_unit": 2.8 },
+            { "from_num_actions": 35000, "up_to_num_actions": "unlimited", "price_per_unit": 2.5 }
+          ]
+        }
+      ]
+    }
+  ]
+},
+
+  {
+  "company_id": "67753d926760f70978ce4cd0",
+  "company_name": "Tranzila",
+  "currency": "ILS",
+  "contract_configurations": [
+    {
+      "contract_start_date": "2024-01-01",
+      "contract_end_date": "2026-12-31",
+      "billing_model": "volume_tiered",
+      "minimum_monthly_fee": 3000.0,
+      "fixed_yearly_fee": 0.0,
+      "payment_rules": [
+        {
+          "event_name": "ocr_ended",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": 1500, "price_per_unit": 8.0 },
+            { "from_num_actions": 1500, "up_to_num_actions": "unlimited", "price_per_unit": 7.0 }
+          ]
+        }
+      ]
+    }
+  ]
+},
+
+  {
+  "company_id": "67e3d43ef4c0fe53abbbda6a",
+  "company_name": "Orda",
+  "currency": "USD",
+  "contract_configurations": [
+    {
+      "contract_start_date": "2024-01-01",
+      "contract_end_date": "2026-02-28",
+      "billing_model": "volume_tiered",
+      "minimum_monthly_fee": 2000.0,
+      "fixed_yearly_fee": 0.0,
+      "payment_rules": [
+        {
+          "event_name": "ocr_started",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": "unlimited", "price_per_unit": 2.5 }
+          ]
+        }
+      ]
+    },
+    {
+      "contract_start_date": "2026-03-01",
+      "contract_end_date": "2028-12-31",
+      "billing_model": "volume_tiered",
+      "minimum_monthly_fee": 2700.0,
+      "fixed_yearly_fee": 0.0,
+      "payment_rules": [
+        {
+          "event_name": "ocr_started",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": "unlimited", "price_per_unit": 2.5 }
+          ]
+        }
+      ]
+    }
+  ]
+},
+
+  {
+  "company_id": "6742fb13ac84281f527c322e",
+  "company_name": "IBI",
+  "currency": "USD",
+  "contract_configurations": [
+    {
+      "contract_start_date": "2024-01-01",
+      "contract_end_date": "2026-12-31",
+      "billing_model": "sum_minus_minimum",
+      "minimum_monthly_fee": 2250.0,
+      "fixed_yearly_fee": 0.0,
+      "payment_rules": [
+        {
+          "event_name": "ocr_started",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": "unlimited", "price_per_unit": 1.0 }
+          ]
+        },
+        {
+          "event_name": "liveness_started",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": "unlimited", "price_per_unit": 0.5 }
+          ]
+        },
+        {
+          "event_name": "stt_started",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": "unlimited", "price_per_unit": 0.5 }
+          ]
+        },
+        {
+          "event_name": "bio_ended",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": "unlimited", "price_per_unit": 0.5 }
+          ]
+        }
+      ]
+    }
+  ]
+},
+
+  {
+  "company_id": "694116efaa3ab1a28058abbc",
+  "company_name": "Toto",
+  "currency": "ILS",
+  "contract_configurations": [
+    {
+      "contract_start_date": "2025-01-01",
+      "contract_end_date": "2026-12-31",
+      "billing_model": "prepaid_with_overage",
+      "prepaid_action_wallet": 10000,
+      "fixed_yearly_fee": 0.0,
+      "minimum_monthly_fee": 0.0,
+      "payment_rules": [
+        {
+          "event_name": "ocr_ended",
+          "shared_bucket_name": "toto_global_wallet",
+          "tiers": []
+        },
+        {
+          "event_name": "bio_ended",
+          "shared_bucket_name": "toto_global_wallet",
+          "tiers": []
+        },
+        {
+          "event_name": "liveness_started",
+          "shared_bucket_name": "toto_global_wallet",
+          "tiers": []
+        },
+        {
+          "event_name": "stt_started",
+          "shared_bucket_name": "toto_global_wallet",
+          "tiers": []
+        }
+      ]
+    }
+  ]
+},
+
+  {
+  "company_id": "67713cd20be62d852922cf73",
+  "company_name": "MSE",
+  "currency": "ILS",
+  "contract_configurations": [
+    {
+      "contract_start_date": "2024-01-01",
+      "contract_end_date": "2026-12-31",
+      "billing_model": "itemized_usage",
+      "minimum_monthly_fee": 0.0,
+      "fixed_yearly_fee": 0.0,
+      "payment_rules": [
+        {
+          "event_name": "ocr_ended",
+          "tiers": [
+            {
+              "from_num_actions": 0,
+              "up_to_num_actions": "unlimited",
+              "price_per_unit": 3.0
+            }
+          ]
+        }
+      ]
+    }
+  ]
+},
+
+  {
+  "company_id": "65a637d6844eb2e80d26a6ec",
+  "company_name": "Max",
+  "currency": "ILS",
+  "contract_configurations": [
+    {
+      "contract_start_date": "2025-11-01",
+      "contract_end_date": "2026-12-31",
+      "billing_model": "prepaid_with_overage",
+      "prepaid_action_wallet": 363622,
+      "fixed_yearly_fee": 0.0,
+      "minimum_monthly_fee": 0.0,
+      "payment_rules": [
+        {
+          "service_name": "liveness",
+          "shared_bucket_name": "max_global_wallet",
+          "tiers": []
+        },
+        {
+          "service_name": "video_statement",
+          "shared_bucket_name": "max_global_wallet",
+          "tiers": []
+        },
+        {
+          "service_name": "ocr",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": "unlimited", "price_per_unit": 0.0 }
+          ]
+        }
+      ]
+    }
+  ]
+},
+
+  {
+  "company_id": "697880e1a9cd6972a9d82d60",
+  "company_name": "Getneema",
+  "currency": "ILS",
+  "contract_configurations": [
+    {
+      "contract_start_date": "2024-01-01",
+      "contract_end_date": "2026-12-31",
+      "billing_model": "itemized_usage",
+      "minimum_monthly_fee": 2500.0,
+      "fixed_yearly_fee": 0.0,
+      "payment_rules": [
+        {
+          "event_name": "ocr_ended",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": "unlimited", "price_per_unit": 1.0 }
+          ]
+        },
+        {
+          "event_name": "bio_ended",
+          "shared_bucket_name": "getneema_bio_pool",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": "unlimited", "price_per_unit": 0.5 }
+          ]
+        },
+        {
+          "event_name": "liveness_started",
+          "shared_bucket_name": "getneema_bio_pool",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": "unlimited", "price_per_unit": 0.5 }
+          ]
+        },
+        {
+          "event_name": "stt_started",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": "unlimited", "price_per_unit": 0.5 }
+          ]
+        }
+      ]
+    }
+  ]
+},
+
+  {
+  "company_id": "65e71023456f1b3a5ba99da2",
+  "company_name": "Phoenix",
+  "currency": "ILS",
+  "contract_configurations": [
+    {
+      "contract_start_date": "2024-01-01",
+      "contract_end_date": "2026-12-31",
+      "billing_model": "volume_tiered",
+      "minimum_monthly_fee": 0.0,
+      "fixed_yearly_fee": 0.0,
+      "payment_rules": [
+        {
+          "event_name": "ocr_started",
+          "tiers": [
+            { "from_num_actions": 0, "up_to_num_actions": 25000, "price_per_unit": 7.2 },
+            { "from_num_actions": 25000, "up_to_num_actions": "unlimited", "price_per_unit": 4.5 }
+          ]
+        }
+      ]
+    }
+  ]
+}
+]

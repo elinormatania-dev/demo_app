@@ -6,6 +6,8 @@ dummyData.json
 data/companies.json
 server/cache
 .idea/
+__pycache__/
+venv/
 
 __pycache__/
 *.pyc

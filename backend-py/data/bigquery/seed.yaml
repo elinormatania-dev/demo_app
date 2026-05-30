@@ -1,0 +1,30 @@
+projects:
+  - id: test-project
+    datasets:
+      - id: events
+        tables:
+          - id: all_events
+            columns:
+              - name: company_id
+                type: STRING
+              - name: event_timestamp
+                type: DATETIME
+              - name: service_name
+                type: STRING
+              - name: event_name
+                type: STRING
+              - name: flow_id
+                type: STRING
+              - name: form_name
+                type: STRING
+              - name: session_id
+                type: STRING
+
+            data:
+              - company_id: "67cd5c8b1f2ebdcbb439afa5"
+                event_timestamp: "2026-01-10T10:00:00Z"
+                service_name: "ocr"
+                event_name: "send_create_session_request"
+                flow_id: "flow_1"
+                form_name: "signup_form"
+                session_id: "sess_001"
