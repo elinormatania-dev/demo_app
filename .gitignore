@@ -9,6 +9,7 @@ server/cache
 __pycache__/
 venv/
 data/
+.DS_Store
 
 __pycache__/
 *.pyc
