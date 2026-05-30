@@ -16,6 +16,7 @@ from models.company_configuration import (
 from services.bigquery import BigQueryService
 from services.transaction import TransactionService
 from services.company import CompanyService
+from services.payment import PaymentService
 
 
 router = APIRouter(prefix="/api/billing")
@@ -81,6 +82,6 @@ async def get_payment_table(company_id: str, time_filter: PeriodBasedFilter, ser
                                                        company.contract_configurations[-1].contract_start_date,
                                                        company.contract_configurations[
                                                            -1].contract_end_date)
-    # TODO: calculate billing
+    # TODO: calculate billing (use payment service)
     return [MonthlyBilling(period='2023-01', num_transactions=100, total_payment=500.0)]
 
